@@ -624,7 +624,7 @@ _**Motivation:** Who here has struggled with slow CSV files? If you have, then t
 
 **Definition:** Arrow.jl is a Julia package that provides an interface to the Apache Arrow format, a cross-language development platform for in-memory data. Arrow is designed for high-performance data interchange and storage, making it ideal for working with large datasets and sharing data between different programming languages (e.g., Julia, Python, R, C++).
 
-- **Key Features:**
+**Key Features:**
 - **Columnar Format:** Optimized for columnar operations (e.g., analytics, machine learning).
 - **Zero-Copy Reads:** No data copying between systems (e.g., Python ↔ Julia).
 - **Language Interoperability:** Works seamlessly with Python, R, C++, and more.
@@ -829,7 +829,7 @@ Integration:
 # ...
 ```
 
-### 6.3. Mention Distributed Computing via [Distributed.jl](https://docs.julialang.org/en/v1/stdlib/Distributed/)
+## 6.3. Mention Distributed Computing via [Distributed.jl](https://docs.julialang.org/en/v1/stdlib/Distributed/)
 
 Distributed.jl is a built-in Julia module that provides tools for parallel and distributed computing. It allows you to distribute computations across multiple processes or machines, enabling you to tackle larger problems and speed up computations by leveraging multiple CPU cores or even clusters of machines.
 
@@ -983,7 +983,7 @@ Here’s an example of distributing a DataFrame across workers and processing it
 - **Data Parallelism:** Distribute large datasets across workers.
 - **Cluster Computing:** Scale computations across multiple machines.
 
-### 6.4 Mention Out-of-Core Computing with Dagger.jl
+## 6.4 Mention Out-of-Core Computing with Dagger.jl
 
 **What is Dagger.jl?**
 - A framework for out-of-core and parallel computation.
@@ -1070,7 +1070,7 @@ Here’s a complete example of using Dagger to process a large dataset:
 
 - Dagger.jl enables you to work with datasets larger than memory.
 
-## 6.3. Mock (or Real) World Example
+## 6.5. Mock (or Real) World Example
 
 _**Scenario:** Analyze a 10GB dataset of student records._
 
