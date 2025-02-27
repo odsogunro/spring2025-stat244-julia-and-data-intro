@@ -5,6 +5,9 @@
 # toptal: https://www.toptal.com/developers/gitignore/api/julia,python,linux,macos,windows
 #####
 
+
+
+
 ###-----
 # TODO: ...
 # - contains 
@@ -36,6 +39,11 @@
 # dotfiles, et cetera, miscellaneous 
 ###
 .env
+
+*.csv
+*.arrow
+
+data_files/
 
 
 # ------------------------- 1. PUBLISHING TOOLS

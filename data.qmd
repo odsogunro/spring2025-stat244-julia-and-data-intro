@@ -1,0 +1,929 @@
+---
+title: Spring 20205 - STAT244 - Julia and Data
+subtitle: 'DataFrames, ... '
+author: Olorundamilola 'Dami' Kazeem
+date: today
+format:
+  pdf:
+    documentclass: article
+    margin-left: 30mm
+    margin-right: 30mm
+    toc: false
+  html:
+    theme: cosmo
+    css: ../styles.css
+    toc: false
+    code-copy: true
+    code-block-background: true
+execute:
+  freeze: auto
+jupyter: julia-1.10
+---
+
+# Spring 2025 - STAT244 - Julia and Data
+
+# Contents ... Presentation Outline
+
+1. Introduction
+
+2. Julia and the Data Ecosystem
+
+3. Introduction to [DataFrames.jl](https://dataframes.juliadata.org/stable/)
+    1. What is a DataFrame?
+    2. Key Features of DataFrames.jl
+    3. Basic Operations
+    4. Mock(or Real) World Example
+
+4. Introduction to [DataFramesMeta.jl](https://juliadata.org/DataFramesMeta.jl/stable/)
+    1. What is DataFramesMeta.jl?
+    2. Key Features of DataFramesMeta.jl
+    3. Basic Operations
+    4. Mock (or Real) World Example
+
+5. Introduction to [Arrow.jl](https://arrow.apache.org/julia/stable/)
+
+    1. What is Apache Arrow?
+    2. Why use Arrow?
+    3. Mock (or Real) World Example
+
+6. Introduction to [Big Data Analysis in Julia](...)
+
+    1. Challenges of Big Data
+    2. Julia’s Approach to Big Data 
+    3. Mention of Distributed Computing via [Distributed.jl](https://docs.julialang.org/en/v1/stdlib/Distributed/)
+    4. Mention of Out-of-Core Computing via [Dagger.jl](https://juliaparallel.org/Dagger.jl/stable/)
+
+7. Questions? Fin.
+
+```{julia}
+using Pkg
+
+Pkg.activate(".")
+
+Pkg.add("BenchmarkTools")
+
+Pkg.add("DataFrames")
+Pkg.add("DataFramesMeta")
+
+Pkg.add("CSV")
+Pkg.add("Arrow")
+
+Pkg.add("Distributed")
+Pkg.add("Dagger")
+
+Pkg.add("Plots")
+Pkg.add("GR")
+```
+
+```{julia}
+using BenchmarkTools
+
+using DataFrames
+using DataFramesMeta
+
+using CSV
+using Arrow
+
+using Distributed
+using Dagger
+
+using Plots
+using GR
+```
+
+# [Introduction](...)
+
+What is **[data literacy](https://en.wikipedia.org/wiki/Data_literacy)**?
+
+As defined by Wikipedia:
+
+- It is the ability to read, understand, create, and communicate **[data](https://en.wikipedia.org/wiki/Data)** as information. 
+
+- It focuses on the competencies involved in working with data. 
+
+- It requires certain skills involving reading and understanding data.
+
+What is [data](https://en.wikipedia.org/wiki/Data)?
+
+As defined by Wikipedia:
+
+- A collection of discrete or continuous values that convey information, describing the quantity, quality, fact, statistics, other basic units of meaning
+
+- A sequence of symbols that may be further interpreted formally; and may be used as variables in a computational process, which may represent abstract ideas or concrete measurements
+
+![Data_Types](./img/Data_types_-_en.svg)
+
+## Julia and the Data Ecosystem v0.0 - Initial Outline
+
+**How to interact with your data in the Julia Data **[JuliaData](https://github.com/JuliaData)** ecosystem?** 
+
+_**NOTE:**_ There's a lot of ground to cover when it comes to data! Below are just of few directions:
+
+```{julia}
+# ...
+```
+
+
+### Data Analysis 
+Julia’s ecosystem includes mature packages like **[DataFrames.jl](https://dataframes.juliadata.org/stable/)** and **[Query.jl](https://www.queryverse.org/Query.jl/stable/)**, which provide robust capabilities for data manipulation, transformation, and exploratory analysis. These tools allow users to work with large datasets in a way that is both intuitive and high-performance.
+
+### Data Processing
+For tasks involving data ingestion and transformation, Julia offers packages such as **[CSV.jl](https://csv.juliadata.org/stable/)** for fast, efficient reading and writing of CSV files, as well as other tools for parsing and processing different data formats. Its design emphasizes speed and efficiency, making it well-suited for handling big data and real-time processing scenarios.
+
+### Data Science
+Julia's performance and syntax make it a strong candidate for data science applications. The language supports statistical modeling, machine learning, and scientific computing through libraries like **[MLJ.jl](https://juliaai.github.io/MLJ.jl/stable/)** for machine learning and **[Flux.jl](https://fluxml.ai/Flux.jl/stable/)** for deep learning. This makes it possible to build and deploy predictive models and complex analytical pipelines with ease.
+
+### Databases
+Interacting with databases in Julia via **[Julia Database Interfaces](https://juliadatabases.org)** is streamlined by packages like **[LibPQ.jl](https://github.com/JuliaDatabases/LibPQ.jl)** for PostgreSQL, **[SQLite.jl](https://juliadatabases.org/SQLite.jl/stable/)** for lightweight database management, and **[ODBC.jl](https://odbc.juliadatabases.org/dev/)** for a range of other SQL databases. These libraries enable efficient data retrieval, storage, and manipulation directly within the Julia environment.
+
+### Data Miscellaneous
+Beyond the core areas, Julia excels in other data-related domains such as:
+- **Data Cleaning and Wrangling:** Leveraging its high-level syntax and powerful libraries to prepare data for analysis, such as [Cleaner.jl](https://theronione.github.io/Cleaner.jl/stable/) a toolbox of simple solutions for common data cleaning problems.
+- **Data Visualization:** Utilizing packages like **[Plots.jl](https://docs.juliaplots.org/stable/)**, **[Makie.jl](https://docs.makie.org/v0.22/)**, and **[Gadfly.jl](https://gadflyjl.org/stable/)** for creating both static and interactive visualizations.
+- **Parallel and Distributed Computing:** Julia’s native support for parallelism makes it a great choice for scaling data processing and analysis tasks across multiple cores or nodes.
+
+Overall, Julia’s growing ecosystem and its blend of high-level expressiveness with low-level performance make it a versatile language for everything from exploratory data analysis to building large-scale data processing and machine learning pipelines.
+
+```{julia}
+# ...
+```
+
+# 1. Introduction to [DataFrames.jl](https://dataframes.juliadata.org/stable/)
+
+
+DataFrames.jl provides a set of tools for working with tabular data in Julia. Its design and functionality are similar to those of `pandas` (in Python) and `data.frame`, `data.table` and `dplyr` (in R), making it a great general purpose data science tool.
+
+To work with tabular datasets and perform common data manipulations
+
+1. What is a DataFrame?
+2. Key Features of DataFrames.jl
+3. Basic Operations
+4. Mock( or Real) World Example
+
+```{julia}
+# Create an empty dataframe
+
+df = DataFrame()
+println(df)
+```
+
+### 1.1. What is a DataFrame?
+
+
+- **Definition:** 
+    - A DataFrame is a tabular data structure, similar to a spreadsheet or SQL table, where data is organized in rows (observations) and columns (heterogeneous types).
+
+- **Purpose:** 
+    - Used for storing, manipulating, and analyzing structured data.
+
+- **Analogy:** 
+    - Think of it as a table in Excel or a table in a database. 
+    - Like a spreadsheet or SQL table, but optimized for programmatic workflows.
+
+```{julia}
+# Create a simple DataFrame
+
+df0 = DataFrame(
+    Name = ["Alice", "Bob", "Charlie"],
+    Age = [25, 30, 35],
+    Salary = [50_000, 75_000, 90_000]
+);
+```
+
+```{julia}
+println(df0)
+```
+
+```{julia}
+mean(df0.Salary)
+```
+
+**NOTE**
+
+- DataFrames.jl's guiding principles can be found [here](https://bkamins.github.io/julialang/2021/05/14/nrow.html); however, two core ones are listed below:
+
+    - Stay consistent with Julia' `Base` module functions.
+    - Minimize the number of function `DataFrames.jl` provides.
+
+- Columns can have different data types (e.g., String, Int64).
+
+- Rows represent individual observations, and columns represent variables.
+
+### 1.2. Key Features of DataFrame.jl
+
+- **Columnar Storage:** Efficient for column-based operations. Optimized for column-wise operations (e.g., `mean(df.Salary)`).
+
+- **Missing Data Handling:** Built-in support for Missing type  (e.g., `dropmissing(df)`).
+
+- **Integration:** Works seamlessly with other Julia packages (e.g., CSV.jl, Arrow.jl, Plots.jl).
+
+- **Performance:** Optimized for fast data manipulation.
+
+- **Flexibility:** Built for speed (no copies, vectorized operations) Supports a wide range of data types and operations.
+
+```{julia}
+# Handling missing data
+
+df = DataFrame(Name = ["Alice", missing, "Charlie"], Age = [25, 30, missing]);
+```
+
+```{julia}
+println(df)
+```
+
+```{julia}
+# Remove rows with missing values
+clean_df = dropmissing(df)  
+println(clean_df)
+```
+
+NOTE
+
+- Missing type allows for explicit handling of incomplete data.
+
+- Use `dropmissing(df)` to remove rows with missing values.
+
+- Use `dropmissing`, `coalesce`, or `replace!` to handle missing data.
+
+### 1.3. Basic Operations
+
+- **Reading and Writing a DataFrame:** To/From vectors, dictionaries, csv files, or databases.
+
+- **Accessing Data:** Rows, columns, and individual elements.
+
+- **Modifying Data:** Adding, removing, and transforming columns.
+
+- **Filtering and Sorting:** Subsetting rows and ordering data.
+
+**Accessing Data**
+
+```{julia}
+# Create a DataFrame with mock data
+df = DataFrame(
+    ID = 1:5,
+    Name = ["Alice", "Bob", "Charlie", "David", "Eve"],
+    Age = rand(20:30, 5),      # Random ages between 20 and 30
+    Score = round.(rand(5) * 100, digits=2),  # Random scores between 0 and 100
+    Active = rand(Bool, 5)      # Random boolean values
+)
+
+# Save the DataFrame to a CSV file
+CSV.write("data.csv", df)
+```
+
+```{julia}
+df = CSV.read("data.csv", DataFrame)
+println(df)
+```
+
+```{julia}
+# Acessing Data by Column Name
+println(df.Name)
+```
+
+- Rows: `df[1:3, :]` or use Julia's built-in `filter(:Age => >(25), df)`.
+
+- Columns: `df.Name` (copying) or `df[!, :Name]` (non-copying).
+
+```{julia}
+# Accessing Data by Row Index (and for all Columns)
+println(df[5, :])
+```
+
+**Modifying Data**
+
+```{julia}
+# Modifying in-place (non-copy) DataFrame and Data by Column Name
+
+df[!, :Bonus] = df.Score .* 0.1;
+```
+
+```{julia}
+println(df)
+```
+
+```{julia}
+# Remove a column 
+select!(df, Not(:Bonus));
+```
+
+```{julia}
+println(df)
+```
+
+**Filtering & Sorting Data**
+
+```{julia}
+# Filter using Base Julia
+df_filtered = filter(row -> row.Age >= 25, df); 
+```
+
+```{julia}
+println(df_filtered)
+```
+
+```{julia}
+# Sort by Score
+df_sorted_by_score = sort(df, :Score);                 
+```
+
+```{julia}
+println(df_sorted_by_score)
+```
+
+**NOTE**
+- Use `filter` and `sort` for row-wise operations.
+
+- Use `select!`, `transform`, and `combine` for column operations.
+
+```{julia}
+# ...
+```
+
+### 1.4. Mock (or Real World) Example
+
+**Scenario:** Analyze employee data to calculate average salary by age group.
+
+```{julia}
+# Create a mock student dataset
+students = DataFrame(
+    ID = 1:8,
+    Name = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Heidi"],
+    Age = [14, 15, 16, 14, 15, 16, 14, 15],
+    Score = [85, 92, 78, 88, 95, 81, 90, 87],
+    Active = [true, true, false, true, true, false, true, true],
+    Grade = [9, 10, 9, 10, 11, 11, 12, 12],
+    Attendance = [95, 88, 92, 85, 90, 78, 96, 89],
+    Scholarship = [false, true, false, true, false, true, false, true]
+);
+
+# Write the DataFrame to a CSV file
+CSV.write("students.csv", students);
+```
+
+```{julia}
+# Display the dataset
+students = CSV.read("students.csv", DataFrame)
+println("Student Dataset:")
+println(students)
+```
+
+**Analysis Tasks**
+
+- Task 1: Calculate the average score by grade.
+- Task 2: Identify top-performing students (score ≥ 90).
+- Task 3: Calculate the average attendance for scholarship vs. non-scholarship students.
+
+```{julia}
+# Task 1: Average score by grade
+avg_score_by_grade = combine(
+    groupby(students, :Grade),
+    :Score => mean => :Average_Score
+);
+
+# Display results
+println("\nAverage Score by Grade:")
+println(avg_score_by_grade)
+```
+
+```{julia}
+# Task 2: Top-performing students (score ≥ 90)
+top_students = filter(row -> row.Score >= 90, students)
+
+println("\nTop-Performing Students (Score ≥ 90):")
+println(top_students)
+```
+
+```{julia}
+# Task 3: Average attendance for scholarship vs. non-scholarship students
+avg_attendance_by_scholarship = combine(
+    groupby(students, :Scholarship),
+    :Attendance => mean => :Average_Attendance
+)
+
+println("\nAverage Attendance by Scholarship Status:")
+println(avg_attendance_by_scholarship)
+```
+
+NOTE:
+
+- Task 1: Use groupby + combine for grouped calculations.
+- Task 2: Use filter to subset rows based on conditions.
+- Task 3: Compare groups (e.g., scholarship vs. non-scholarship) using groupby.
+
+# 4. Introduction to [DataFramesMeta.jl](https://juliadata.org/DataFramesMeta.jl/stable/)
+
+1. What is DataFramesMeta.jl?
+2. Key Features of DataFramesMeta.jl
+3. Basic Operations
+4. Mock (or Real) World Example
+
+_**Goal:** Show how DataFramesMeta.jl simplifies and streamlines data manipulation with a chainable, expressive syntax._
+
+### 4.1. What is DataFramesMeta.jl?
+
+- **Definition:** A meta-package built on DataFrames.jl that provides a concise, chainable syntax for data manipulation.
+
+- **Inspiration:** Borrows ideas from R’s `dplyr` and Python’s `pandas`.
+
+- **Why Use It?:** Reduces boilerplate code, improves readability, and makes workflows more intuitive.
+
+**Key:**
+- DataFramesMeta.jl is not a replacement for DataFrames.jl—it’s a **syntactic sugar*** layer on top.
+
+- It is an example of _**metaprogramming tools for DataFrames.jl objects to provide more convenient syntax.**_
+
+DataFrames.jl has the functions select, transform, and combine, as well as the in-place select! and transform! for manipulating data frames. 
+
+DataFramesMeta.jl provides the macros @select, @transform, @combine, @select!, and @transform! to mirror these functions with more convenient syntax. Inspired by dplyr in R and LINQ in C#.
+
+In addition, DataFramesMeta provides
+
+- @orderby, for sorting data frames
+- @subset and @subset!, for keeping rows of a data frame matching a given condition
+- Row-wise versions of the above macros in the form of @rtransform, @rtransform!, @rselect, @rselect!, @rorderby, @rsubset, and @rsubset!.
+- @rename and @rename! for renaming columns
+- @groupby for grouping data
+- @by, for grouping and combining a data frame in a single step
+- @with, for working with the columns of a data frame with high performance and convenient syntax
+- @eachrow and @eachrow! for looping through rows in data frame, again with high performance and convenient syntax.
+- @byrow for applying functions to each row of a data frame (only supported inside other macros).
+- @passmissing for propagating missing values inside row-wise DataFramesMeta.jl transformations.
+- @astable to create multiple columns within a single transformation.
+- @chain, from Chain.jl for piping the above macros together, similar to magrittr's %>% in R.
+- @label! and @note! for attaching metadata to columns.
+
+```{julia}
+# ...
+```
+
+**Coverage:**
+
+1. Chainable Syntax: Use @chain to create readable, step-by-step workflows.
+
+2. Symbol-Based Operations: Refer to columns using symbols (:column_name).
+
+3. Common Verbs:
+    - @select: Select or rename columns.
+    - @transform: Add or modify columns.
+    - @subset: Filter rows based on conditions.
+    - @groupby: Group data by one or more columns.
+    - @combine: Summarize grouped data.
+    - @orderby: Sort rows by one or more columns.
+
+**Key Point:**
+
+- DataFramesMeta.jl is ideal for users familiar with dplyr or pandas.
+
+```{julia}
+# Read in the dataset
+students = CSV.read("students.csv", DataFrame)
+println("Student Dataset:")
+println(students)
+```
+
+## ...
+
+```{julia}
+# Select specific columns
+selected = @chain students begin
+    @select(:Name, :Score, :Grade)
+end
+
+# Rename columns
+renamed = @chain students begin
+    @select(:Student_Name = :Name, :Exam_Score = :Score)
+end
+
+println("Selected Columns:")
+println(selected)
+
+println("\nRenamed Columns:")
+println(renamed)
+```
+
+```{julia}
+# @transform: Add or Modify Columns
+
+# Add a new column for pass/fail status
+transformed = @chain students begin
+    @transform(:Pass = :Score .>= 90)
+end
+
+println("Transformed DataFrame:")
+println(transformed)
+```
+
+```{julia}
+# @subset: Filter Rows Based on Conditions
+
+# Filter active students with a score ≥ 90
+filtered = @chain students begin
+    @subset(:Active .&& :Score .>= 90)
+end
+
+println("Filtered DataFrame:")
+println(filtered)
+```
+
+```{julia}
+# @groupby: Group Data by One or More Columns
+
+# Group by Grade
+grouped = @chain students begin
+    @groupby(:Grade)
+end
+
+println("Grouped DataFrame:")
+println(grouped)
+```
+
+```{julia}
+# @combine: Summarize Grouped Data
+
+# Calculate average score by grade
+combined = @chain students begin
+    @groupby(:Grade)
+    @combine(:Average_Score = mean(:Score))
+end
+
+println("Combined DataFrame:")
+println(combined)
+```
+
+```{julia}
+# @orderby: Sort Rows by One or More Columns
+
+# Sort by Score in descending order
+sorted = @chain students begin
+    @orderby(-:Score)
+end
+
+println("Sorted DataFrame:")
+println(sorted)
+```
+
+```{julia}
+# @orderby: Sort Rows by One or More Columns
+# Sort by Score in descending order
+sorted = @chain students begin
+    @orderby(+:Score)
+end
+
+println("Sorted DataFrame:")
+println(sorted)
+```
+
+**Let's revisit the 3 tasks from before using DataFramesMeta.jl!**
+
+```{julia}
+# Task 1: Average score by grade
+avg_score_by_grade = @chain students begin
+    @groupby(:Grade)
+    @combine(:Average_Score = mean(:Score))
+end
+
+println(avg_score_by_grade)
+```
+
+```{julia}
+# Task 2: Top-performing students (score ≥ 90)
+top_students = @chain students begin
+    @subset!(:Score .>= 90)  # Correct usage of @subset
+end
+
+println(top_students)
+```
+
+```{julia}
+# Task 3: Average attendance for scholarship vs. non-scholarship students
+avg_attendance_by_scholarship = @chain students begin
+    @groupby(:Scholarship)
+    @combine(:Average_Attendance = mean(:Attendance))
+end
+
+println(avg_attendance_by_scholarship)
+```
+
+## ...
+
+# 5. Introduction to [Arrow.jl](https://arrow.apache.org/julia/stable/)
+
+1. What is Apache Arrow?
+2. Why use Arrow?
+3. Arrow.jl in Julia
+4. Mock (or Real) World Example
+
+```{julia}
+# ...
+```
+
+## 5.1 What is Arrow i.e. Apache Arrow?
+
+_**Motivation:** Who here has struggled with slow CSV files? If you have, then try Arrow!_
+
+**Definition:** Arrow.jl is a Julia package that provides an interface to the Apache Arrow format, a cross-language development platform for in-memory data. Arrow is designed for high-performance data interchange and storage, making it ideal for working with large datasets and sharing data between different programming languages (e.g., Julia, Python, R, C++).
+
+- **Key Features:**
+- **Columnar Format:** Optimized for columnar operations (e.g., analytics, machine learning).
+- **Zero-Copy Reads:** No data copying between systems (e.g., Python ↔ Julia).
+- **Language Interoperability:** Works seamlessly with Python, R, C++, and more.
+
+**Key Point:**
+- Arrow is ideal for big data workflows and multi-language environments.
+
+```{julia}
+# ...
+```
+
+## 5.2 Why Use Arrow.jl?
+
+- **Performance:** Arrow is faster than CSV/JSON for reading and writing large datasets.
+- **Memory Efficiency:** Columnar format reduces memory usage.
+- **Interoperability:** Share data between Julia and other languages (e.g., Python, R).
+- **Integration:** Works seamlessly with DataFrames.jl and other Julia data tools.
+
+**Key Point:**
+- Arrow.jl is the Julia interface to Apache Arrow, enabling high-performance data workflows.
+
+```{julia}
+# ...
+```
+
+**CSV vs. Arrow:**
+
+- Arrow is 10–100x faster for reading/writing large datasets.
+- Arrow uses less memory due to its columnar format.
+
+**Example Benchmark:**
+
+- Load a 1GB CSV file vs. a 1GB Arrow file.
+
+**Key Point:**
+
+- Arrow is the best choice for big data workflows.
+
+## 5.4 Mock (or Real-World) Example
+
+```{julia}
+# Read in the dataset
+students = CSV.read("students.csv", DataFrame)
+
+# Save the DataFrame to an Arrow file
+Arrow.write("students_FROMcsv_TO.arrow", students)
+```
+
+```{julia}
+# Load the Arrow file back into Julia
+
+arrow_table = Arrow.Table("students_FROMcsv_TO.arrow")
+loaded_df = DataFrame(arrow_table)
+println(loaded_df)
+```
+
+### CSV vs Arrow Benchmark
+
+```{julia}
+# Create a large dataset (1 million rows)
+# n = 1_000_000_000 # trillion is too much for a demo :-)
+n = 1_000_000
+large_df = DataFrame(
+    ID = 1:n,
+    Name = rand(["Alice", "Bob", "Charlie", "David", "Eve"], n),
+    Age = rand(14:18, n),
+    Score = rand(50:100, n),
+    Active = rand([true, false], n),
+    Grade = rand(9:12, n),
+    Attendance = rand(70:100, n),
+    Scholarship = rand([true, false], n)
+)
+
+# Save the dataset as CSV and Arrow
+CSV.write("large_data.csv", large_df);
+Arrow.write("large_data.arrow", large_df);
+```
+
+```{julia}
+### Local Machine
+# Benchmarking Read Performance:
+#   507.539 ms (821 allocations: 68.71 MiB)
+#   187.712 μs (578 allocations: 28.24 KiB)
+###
+
+### Remote Machine Arwen
+# Benchmarking Read Performance:
+#   442.207 ms (820 allocations: 68.26 MiB)
+#   157.131 μs (513 allocations: 28.38 KiB)
+###
+
+# Benchmark reading
+println("Benchmarking Read Performance:")
+@btime CSV.read("large_data.csv", DataFrame)
+@btime Arrow.Table("large_data.arrow")
+```
+
+```{julia}
+### Local Machine
+# Benchmarking Write Performance:
+# 1.085 s (33994424 allocations: 888.93 MiB)
+# 69.193 ms (324 allocations: 27.04 MiB)
+###
+
+### Remote Machine Arwen
+# Benchmarking Write Performance:
+#   765.590 ms (33994399 allocations: 888.93 MiB)
+#   471.580 ms (407 allocations: 19.83 MiB)
+###
+
+# Benchmark writing
+println("\nBenchmarking Write Performance:")
+@btime CSV.write("large_data.csv", large_df)
+@btime Arrow.write("large_data.arrow", large_df)
+```
+
+![CSV_vs_Arrow](./img/CSV_vs_Arrow.png)
+
+```{julia}
+using Plots
+
+###
+# Plot takes about 1 minutes
+###
+
+###
+# Benchmarking Read Performance:
+#   507.539 ms (821 allocations: 68.71 MiB)  --> 0.507539000 s
+#   187.712 μs (578 allocations: 28.24 KiB)  --> 0.000187712 s
+###
+
+###
+# Benchmarking Write Performance:
+# 1.085 s (33994424 allocations: 888.93 MiB) --> 1.085000000 s
+# 69.193 ms (324 allocations: 27.04 MiB)     --> 0.069193000 s
+###
+
+
+# Data for plotting
+
+using Plots
+
+# Data for plotting
+operations = ["Read", "Write"]
+csv_times = [0.507539000, 1.085000000]  # Replace with actual benchmark results
+arrow_times = [0.000187712, 0.069193000]  # Replace with actual benchmark results
+
+# Plot 
+bar(operations, [csv_times arrow_times],
+    label = ["CSV", "Arrow"],
+    xlabel = "Operation",
+    ylabel = "Time (seconds)",
+    title = "CSV vs Arrow Performance")
+```
+
+# 6. Introduction to [Big Data Analysis in Julia](...)
+
+1. Challenges of Big Data
+2. Julia’s Approach to Big Data 
+3. Distributed Computing via [Distributed.jl](https://docs.julialang.org/en/v1/stdlib/Distributed/)
+4. Out-of-Core Computing via [Dagger.jl](https://juliaparallel.org/Dagger.jl/stable/)
+5. Handing Large Datasets via [CSV.jl](https://csv.juliadata.org/stable/)
+
+```{julia}
+# ...
+```
+
+## 6.1. Challenges of Big Data
+
+_**Goal:** Demonstrate how Julia handles large datasets using distributed and out-of-core computing._
+
+- **Volume:** Datasets too large to fit into memory.
+- **Velocity:** Data arriving in real-time streams.
+- **Variety:** Structured, semi-structured, and unstructured data.
+- **Julia’s Solution:** Distributed and out-of-core computing.
+
+**Key Point:**
+
+- Julia provides tools to handle big data efficiently, even on a single machine or a cluster.
+
+```{julia}
+# ...
+```
+
+## 6.2. Julia’s Approach to Big Data
+
+Distributed Parallel Computing:
+- Use multiple processes or machines to parallelize computations.
+- Tools: Distributed.jl, MPI.jl.
+
+Out-of-Core Parallel Computing:
+- Process data that doesn’t fit into memory by working in chunks.
+- Tools: Dagger.jl, CSV.jl (with chunking).
+
+Integration:
+- Works seamlessly with DataFrames.jl, CSV.jl, Arrow.jl, and other data tools.
+
+**Key Point:**
+
+- Julia’s ecosystem is designed for scalability.
+
+```{julia}
+# ...
+```
+
+```{julia}
+# using Distributed
+
+# nprocs()
+```
+
+```{julia}
+# Add Worker Processes: Add one Julia worker per CPU core
+# addprocs()  
+```
+
+```{julia}
+# Parallel Map-Reduce:
+# @btime @distributed (+) for i in 1:1_000_000
+#     i^2
+# end
+```
+
+**NOTE:**
+
+`Distributed.jl` makes it easy to parallelize computations.
+
+### Out-of-Core Computing with Dagger.jl
+
+**What is Dagger.jl?**
+- A framework for out-of-core and parallel computation.
+- Works with large datasets by processing them in chunks.
+
+```{julia}
+# Create a large distributed array
+# arr = Dagger.ones(10^6);
+```
+
+```{julia}
+# Compute the sum in chunks
+# sum_arr = sum(arr)
+```
+
+**Integration with DataFrames**
+
+- Use Dagger to process large DataFrames in chunks.
+
+**Key Point**
+
+- Dagger.jl enables you to work with datasets larger than memory.
+
+## 6.3. Mock (or Real) World Example
+
+_**Scenario:** Analyze a 10GB dataset of student records._
+
+**NOTE**
+
+1. Distributed Computing: Use Distributed.jl to parallelize computations.
+
+2. Out-of-Core Computing: Use Dagger.jl to process large datasets in chunks.
+
+3. Integration: Julia’s tools work seamlessly together for big data workflows.
+
+**Key Point**
+
+- Julia is a powerful tool for big data analysis, from small datasets to terabytes of data.
+
+```{julia}
+# using Distributed, Dagger, CSV, DataFrames
+
+# # Step 1: Add worker processes
+# addprocs(4)
+
+# # Step 2: Read the dataset in chunks
+# df = CSV.read("large_students.csv", DataFrame; chunksize=100_000)
+
+# # Step 3: Process chunks in parallel
+# @distributed for chunk in df
+#     # Perform analysis on each chunk
+# end
+
+# # Step 4: Combine results
+# results = fetch(@distributed (+) for chunk in df
+#     sum(chunk.Score)
+# end)
+
+# println("Total Score: ", results)
+```
+
+## Fin!
+
+**A Data Project's Logical Flow in Julia and Elsewhere**:  
+   - Start simple (DataFrames & DataFramesMeta) → Build complexity (CSV & Arrow) → Scale up to Big Data (Distributed & Dagger). 
+
+## References
+
+1. [JuliaData](https://github.com/JuliaData): Data manipulation, storage, and I/O in Julia 
+2. [Julia Data Science](https://juliadatascience.io): Data Science using Julia
+3. [Julia for Data Analysis](https://github.com/bkamins/JuliaForDataAnalysis)
+4. [Wikipedia on Data](https://en.wikipedia.org/wiki/Data)
+5. [Wikipedia on Data Literacy](https://en.wikipedia.org/wiki/Data_literacy)
+
