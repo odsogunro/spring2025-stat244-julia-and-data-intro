@@ -784,9 +784,8 @@ bar(operations, [csv_times arrow_times],
 
 1. Challenges of Big Data
 2. Julia’s Approach to Big Data 
-3. Distributed Computing via [Distributed.jl](https://docs.julialang.org/en/v1/stdlib/Distributed/)
-4. Out-of-Core Computing via [Dagger.jl](https://juliaparallel.org/Dagger.jl/stable/)
-5. Handing Large Datasets via [CSV.jl](https://csv.juliadata.org/stable/)
+3. Mention Distributed Computing via [Distributed.jl](https://docs.julialang.org/en/v1/stdlib/Distributed/)
+4. Mention Out-of-Core Computing via [Dagger.jl](https://juliaparallel.org/Dagger.jl/stable/)
 
 ```{julia}
 # ...
@@ -830,42 +829,237 @@ Integration:
 # ...
 ```
 
+### 6.3. Mention Distributed Computing via [Distributed.jl](https://docs.julialang.org/en/v1/stdlib/Distributed/)
+
+Distributed.jl is a built-in Julia module that provides tools for parallel and distributed computing. It allows you to distribute computations across multiple processes or machines, enabling you to tackle larger problems and speed up computations by leveraging multiple CPU cores or even clusters of machines.
+
+- **Parallel Loops**: Use `@distributed` to distribute loops across multiple workers, enabling faster computation for large-scale tasks.  
+
+- **Task Parallelism**: Use `@spawn` to run tasks asynchronously on workers, ideal for independent or background computations.  
+
 ```{julia}
+###
 # using Distributed
+###
 
 # nprocs()
 ```
 
 ```{julia}
+###
 # Add Worker Processes: Add one Julia worker per CPU core
-# addprocs()  
+###
+
+# addprocs(4)  # Add 4 local worker processes
 ```
 
 ```{julia}
+###
 # Parallel Map-Reduce:
-# @btime @distributed (+) for i in 1:1_000_000
+###
+
+# @distributed (+) for i in 1:1_000_000
 #     i^2
 # end
+```
+
+```{julia}
+###
+# Load LinearAlgebra on all workers
+###
+
+# @everywhere using LinearAlgebra  
+```
+
+```{julia}
+###
+# Distribute Computations
+# Use @distributed to parallelize a loop across workers.
+# Sum of squareis using @distributed
+###
+
+# result = @distributed (+) for i in 1:1_000_000
+#     i^2
+# end
+
+# println("Sum of squares: ", result)
+```
+
+```{julia}
+###
+# Remote Execution
+# Use @spawn to run a task asynchronously on a worker.
+###
+
+# Run a task on a worker
+# future = @spawn begin
+#     sum(i^2 for i in 1:1_000_000)
+# end
+
+# # Fetch the result
+# result = fetch(future)
+# println("Sum of squares: ", result)
+```
+
+```{julia}
+###
+# Share Data Between Processes
+# Use RemoteChannel to share data between processes.
+###
+
+# Create a remote channel
+channel = RemoteChannel(()->Channel{Int}(10))
+
+# # Put data into the channel on worker 2
+# @spawnat 2 begin
+#     for i in 1:10
+#         put(channel, i)
+#     end
+# end
+
+# # Fetch data from the channel on the master process
+# for i in 1:10
+#     println("Received: ", take(channel))
+# end
+```
+
+#### Mock (or Real) Example
+
+**Example: Distributed DataFrames**
+
+Here’s an example of distributing a DataFrame across workers and processing it in parallel.
+
+```{julia}
+# using Distributed, DataFrames
+
+# # Add worker processes
+# addprocs(4)
+
+# # Load DataFrames on all workers
+# @everywhere using DataFrames, Statistics
+
+# # Create a large DataFrame
+# n = 1_000_000
+# students = DataFrame(
+#     ID = 1:n,
+#     Name = rand(["Alice", "Bob", "Charlie", "David", "Eve"], n),
+#     Age = rand(14:18, n),
+#     Score = rand(50:100, n),
+#     Grade = rand(9:12, n)
+# )
+
+# # Split the DataFrame into chunks
+# chunks = [students[i:min(i + 250_000 - 1, n), :] for i in 1:250_000:n]
+
+# # Distribute chunks to workers
+# @everywhere workers() begin
+#     global my_chunk = chunks[myid() - 1]  # Assign a chunk to each worker
+# end
+
+# # Define a function to calculate average score by grade
+# @everywhere function average_score_by_grade(df)
+#     return combine(groupby(df, :Grade), :Score => mean => :Average_Score)
+# end
+
+# # Compute results in parallel
+# results = @distributed (vcat) for i in workers()
+#     average_score_by_grade(my_chunk)
+# end
+
+# # Combine results (average across all chunks)
+# final_result = combine(groupby(results, :Grade), :Average_Score => mean => :Final_Average_Score)
+
+# # Display the final result
+# println("Final Average Score by Grade:")
+# println(final_result)
 ```
 
 **NOTE:**
 
 `Distributed.jl` makes it easy to parallelize computations.
 
-### Out-of-Core Computing with Dagger.jl
+- **Parallel Loops:** Use @distributed to parallelize loops.
+- **Task Parallelism:** Use @spawn to run tasks asynchronously.
+- **Data Parallelism:** Distribute large datasets across workers.
+- **Cluster Computing:** Scale computations across multiple machines.
+
+### 6.4 Mention Out-of-Core Computing with Dagger.jl
 
 **What is Dagger.jl?**
 - A framework for out-of-core and parallel computation.
 - Works with large datasets by processing them in chunks.
 
+Dagger.jl is a Julia package designed for out-of-core and parallel computation. It allows you to work with datasets that are too large to fit into memory by breaking them into smaller chunks and processing them in parallel. Dagger is particularly useful for big data workflows, where traditional in-memory approaches are not feasible.
+
 ```{julia}
-# Create a large distributed array
-# arr = Dagger.ones(10^6);
+# Create a large array (1 billion elements)
+
+# large_array = Dagger.ones(1_000_000_000)
 ```
 
 ```{julia}
-# Compute the sum in chunks
-# sum_arr = sum(arr)
+# Perform Out-of-Core Computations
+# Dagger automatically breaks the array into chunks and processes them in parallel.
+
+# Compute the sum of the array
+# sum_result = sum(large_array)
+# println("Sum of large array: ", sum_result)
+```
+
+```{julia}
+# Parallel Map-Reduce
+# Dagger supports parallel map-reduce operations, which are useful for big data workflows.
+
+# Map: Square each element
+# Reduce: Sum the squared elements
+
+# result = Dagger.@par mapreduce(i -> i^2, +, large_array)
+# println("Sum of squares: ", result)
+```
+
+```{julia}
+# Integration with DataFrames.jl
+# Dagger can also work with tabular data. Here’s an example of processing a large DataFrame:
+
+# using DataFrames
+
+# # Create a large DataFrame
+# n = 1_000_000
+# large_df = DataFrame(
+#     ID = 1:n,
+#     Value = rand(1:100, n)
+# )
+
+# # Convert the DataFrame to a Dagger table
+# dagger_table = Dagger.Table(large_df)
+
+# # Compute the mean of the "Value" column
+# mean_value = Dagger.@par mean(dagger_table.Value)
+# println("Mean value: ", mean_value)
+```
+
+#### Mock (or Real) Example
+
+**Example: Out-of-Core Computation**
+
+Here’s a complete example of using Dagger to process a large dataset:
+
+```{julia}
+# using Dagger, DataFrames
+
+# # Create a large DataFrame
+# n = 1_000_000
+# large_df = DataFrame(
+#     ID = 1:n,
+#     Value = rand(1:100, n)
+# )
+
+# # Convert the DataFrame to a Dagger table
+# dagger_table = Dagger.Table(large_df)
+
+# # Perform a parallel map-reduce operation
+# result = Dagger.@par mapreduce(row -> row.Value^2, +, dagger_table)
+# println("Sum of squared values: ", result)
 ```
 
 **Integration with DataFrames**
@@ -887,6 +1081,13 @@ _**Scenario:** Analyze a 10GB dataset of student records._
 2. Out-of-Core Computing: Use Dagger.jl to process large datasets in chunks.
 
 3. Integration: Julia’s tools work seamlessly together for big data workflows.
+
+**Useful For**
+
+- **Big Data Workflows:** Process datasets larger than memory by working with chunks.
+- **Parallel Computing:** Automatically parallelize computations across CPU cores.
+- **Lazy Evaluation:** Optimize task execution with deferred computation.
+- **Integration:** Combine Dagger with DataFrames.jl and Distributed.jl for scalable data analysis.
 
 **Key Point**
 
